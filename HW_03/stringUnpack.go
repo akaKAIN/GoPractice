@@ -27,8 +27,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	sepRow := separator(input)
-	result, err := multiplySymbol(sepRow)
+	sepRow := Separator(input)
+	result, err := MultiplySymbol(sepRow)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +36,7 @@ func main() {
 
 }
 
-func separator(row string) []string {
+func Separator(row string) []string {
 	var tmp string
 	var result []string
 	for i := range row {
@@ -57,7 +57,7 @@ func separator(row string) []string {
 	return result
 }
 
-func multiplySymbol(strSlice []string) (string, error) {
+func MultiplySymbol(strSlice []string) (string, error) {
 	var result string
 	for i := range strSlice{
 		num, err := strconv.Atoi(strSlice[i])
@@ -67,7 +67,7 @@ func multiplySymbol(strSlice []string) (string, error) {
 		}
 		for j:=0; j<num-1; j++{
 			if i == 0{
-				err = fmt.Errorf("Некорректная строка")
+				err = fmt.Errorf("Некорректная строка\n")
 				return strSlice[i], err
 			}
 			result += strSlice[i-1]
