@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"testing"
 )
 
@@ -22,8 +21,6 @@ func TestGetMap(t *testing.T) {
 			"четыре": 4,
 		}}
 	result := GetMap(TestText)
-	fmt.Println(result)
-	fmt.Println(right.m)
 	if right.len != len(result) {
 		t.Errorf("Ожидается: %v, получено: %v", right.len, len(result))
 	}

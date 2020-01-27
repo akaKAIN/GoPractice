@@ -18,12 +18,14 @@ func main() {
 }
 
 func GetMap(text string) map[string]int {
-	//var row []Word
-	var tmp string
+
+	var (
+		tmp    string
+		result = make(map[string]int)
+	)
 
 	words := strings.Fields(text)
-	fmt.Printf("Длина строки: %d\n", len(words))
-	var result = make(map[string]int, len(words))
+
 	for _, word := range words {
 		switch {
 		case strings.Contains(word, ","):
@@ -36,10 +38,7 @@ func GetMap(text string) map[string]int {
 			tmp = word
 		}
 		tmp = strings.ToLower(tmp)
-
 		result[tmp]++
 	}
-	fmt.Println("Длина словаря:", len(result))
-
 	return result
 }
