@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 )
@@ -49,7 +48,6 @@ func TestGetTopKeys(t *testing.T) {
 	if reflect.DeepEqual(rigth.s, k){
 		t.Errorf("Ошибка содержимого слайса.\nПолучено: %v\nОжидается: %v\n", k, rigth.s)
 	}
-	fmt.Printf("Ожидается:%v\nПолучено:%v\n", rigth.s, k)
 }
 
 func TestReverseSlice(t *testing.T) {
