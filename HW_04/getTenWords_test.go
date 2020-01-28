@@ -63,3 +63,16 @@ func TestReverseSlice(t *testing.T) {
 		}
 	}
 }
+
+func TestReverseSliceTwo(t *testing.T) {
+	var right = []string{"5","4","3","2","1"}
+	s := ReverseSliceTwo([]string{"1","2","3","4","5"})
+	if len(right) != len(s) {
+		t.Errorf("Длина сайса неверна. Получено: %v  Ожидается: %v\n", len(s), len(right))
+	}
+	for i:=0; i<len(right); i++{
+		if right[i] != s[i]{
+			t.Errorf("Ошибка содержимогo. Получено: %v  Ожидается: %v\n", s[i], right[i])
+		}
+	}
+}
