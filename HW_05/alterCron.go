@@ -5,79 +5,80 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
-	"time"
 )
 
-
-
 func main() {
-	var count int
-	var workDir = "."
+	//Инициализация меню-подсказки
+	InitFlag()
 
-	if len(os.Args) == 2 {
-		checkPath := os.Args[1]
-		if _, err := os.Stat(checkPath); !os.IsNotExist(err) {
-			workDir = checkPath
-		}
-	}
+	//Получаем список файлов в контролируемой директории
+	FileList := GetFileList(DirFrom)
 
-	for {
-		count++
-		fmt.Printf("\nStep № %d\n", count)
-		MoveImages(workDir)
-		time.Sleep(60 * time.Second)
+	//Проверка существования директории для конечных файлов. Если ее нет - создаем.
+	PathToStorageDir := GetOrCreateDir(DirTo, ImageDir)
 
-	}
+	//for _, file := range FileList {
+	//
+	//	//Проверяем файл на валидность и соответствие расширения
+	//	if CheckFile(file) {
+	//
+	//		//Копируем файл в папку-хранилище
+	//		err := CopyFile(file)
+	//		if err != nil {
+	//			log.Printf("CopyError: %v file:%s\n", err, file.Name())
+	//		}
+	//
+	//		//Удаляем старую копию файла если файл успешно скопирован
+	//		if err == nil {
+	//			err = DelFile(file, PathToStorageDir)
+	//			if err != nil {
+	//				log.Printf("DelError: %v file:%s\n", err, file.Name())
+	//			}
+	//		}
+	//
+	//		//Информирование об успешном переносе файла
+	//		if LOGGING && !err {
+	//			log.Printf("Перемещен: %s", file.Name())
+	//		}
+	//	}
+	//
+	//}
+
+fmt.Println(FileList, PathToStorageDir)
+
 }
 
-func MoveImages(path string) {
-	var formats = []string{".jpeg", ".jpg"}
+func GetFileList(DirName string) []os.FileInfo {
 
-	AbsPath, _ := filepath.Abs(ImageDir)
-
-	err := os.MkdirAll(ImageDir, os.ModePerm)
-	if err == nil {
-		fmt.Printf("Создана папка для хранения картинок по адресу:\n%s\n\n", AbsPath)
-	}
-
-
-	files, err := ioutil.ReadDir(path)
+	files, err := ioutil.ReadDir(DirName)
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	for _, file := range files {
-		if file.IsDir() {
-			continue
-		}
-		for _, format := range formats {
-			if filepath.Ext(file.Name()) == format {
-				//TODO: replace func
-				err := replace(file)
-				if err != nil {
-					log.Printf("Ошибка перемещения файла: %q", file)
-				}
-				continue
-			}
-		}
-	}
-
+	return files
 }
 
-func replace(file os.FileInfo) error {
-	AbsPath, _ := filepath.Abs(ImageDir)
-	FilePath := path.Join(AbsPath, file.Name())
+func GetOrCreateDir(dir, imageDir string)(fullPath string){
 
-	body, err := ioutil.ReadFile(file.Name())
-	if err != nil {
+	absPath, err := filepath.Abs(dir)
+	if err !=nil{
+		log.Fatal(err)
+	}
+	fullPath = filepath.Join(absPath, imageDir)
+
+	if _, err := os.Stat(fullPath); !os.IsExist(err){
+		if err := os.Mkdir(fullPath, os.ModePerm); err !=nil{
+			return
+		}
+		log.Printf("Создана папка для хранения файлов по адресу: %v\n", fullPath)
+	}
+	return
+}
+
+func DelFile(file os.FileInfo, path string) error {
+	PathToFile := filepath.Join(path, file.Name())
+	if err := os.Remove(PathToFile); err != nil{
 		return err
 	}
-	if err = ioutil.WriteFile(FilePath, body, 775); err != nil {
-		return err
-	}
-
-	fmt.Printf("Файл %s скопирован.", file.Name())
 	return nil
 }
