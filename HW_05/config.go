@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log"
 	"path/filepath"
 )
 
@@ -13,10 +13,16 @@ var (
 	LOGGING bool
 )
 
+var ExtArr = []string{".jpeg", ".jpg", ".png"}
+
 const ImageDir = "Images"
 
+
 func GetBaseDir() string {
-	way, _ := filepath.Abs(".")
+	way, err := filepath.Abs(".")
+	if err != nil {
+		log.Fatal(err)
+	}
 	return filepath.Base(way)
 }
 
@@ -26,10 +32,10 @@ func InitFlag() {
 	flag.StringVar(&DirTo, "dir_to", GetBaseDir(), "Директория для сохранения файлов")
 	flag.BoolVar(&LOGGING, "log", false, "Нужно ли выводить логи копирования файлов (Да=1/true; Нет=0/false).")
 	flag.Parse()
-	tailPtr := flag.Args()
-	fmt.Printf("directory: %s\n", DirFrom)
-	fmt.Printf("directory: %s\n", DirTo)
-	fmt.Printf("timer: %d\n", TIMER)
-	fmt.Printf("Logging: %t\n", LOGGING)
-	fmt.Printf("tail: %v\n", tailPtr)
+	//tailPtr := flag.Args()
+	//fmt.Printf("directory: %s\n", DirFrom)
+	//fmt.Printf("directory: %s\n", DirTo)
+	//fmt.Printf("timer: %d\n", TIMER)
+	//fmt.Printf("Logging: %t\n", LOGGING)
+	//fmt.Printf("tail: %v\n", tailPtr)
 }
