@@ -6,18 +6,28 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 func main() {
 	//Инициализация меню-подсказки
 	InitFlag()
 
-	//Получаем список файлов в контролируемой директории
-	FileList := GetFileList(DirFrom)
-
 	//Проверка существования директории для конечных файлов. Если ее нет - создаем.
-	PathToStorageDir := GetOrCreateDir(DirTo, ImageDir)
+	if err := GetOrCreateDir(DirTo); err != nil {
+		log.Fatal(err)
+	}
+	for {
+		//Получаем список файлов в базовой директории
+		FileList := GetFileList(DirFrom)
+		go ReplaceFiles(FileList, DirTo)
 
+		time.Sleep(time.Duration(TIMER))
+	}
+
+}
+
+func ReplaceFiles(FileList []os.FileInfo, PathToStorageDir string) {
 	for _, file := range FileList {
 
 		//Проверяем файл на валидность и соответствие расширения
@@ -31,7 +41,7 @@ func main() {
 
 			//Удаляем старую копию файла если файл успешно скопирован
 			if err == nil {
-				err = DelFile(file, PathToStorageDir)
+				err = DelFile(file, DirFrom)
 				if err != nil {
 					log.Printf("DelError: %v file:%s\n", err, file.Name())
 				}
@@ -42,44 +52,38 @@ func main() {
 		}
 
 	}
-
-	fmt.Println(FileList, PathToStorageDir)
-
 }
 
-func PrintInfoLog(text string){
-	if LOGGING{
+func PrintInfoLog(text string) {
+	if LOGGING {
 		log.Println(text)
 	}
 }
 
 func GetFileList(DirName string) []os.FileInfo {
 	/*Возвращает список файлов указанной директории*/
-
-	files, err := ioutil.ReadDir(DirName)
+	DirNamePath, err := filepath.Abs(DirName)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Ошибка построения абсолютного пути к %q : %v", DirName, err)
+	}
+	files, err := ioutil.ReadDir(DirNamePath)
+	if err != nil {
+		log.Fatal("Ошибка чтения:", err)
 	}
 	return files
 }
 
-func GetOrCreateDir(dir, imageDir string) (fullPath string) {
+func GetOrCreateDir(dir string) error {
 	/*Проверяет существует ли указанная папка для хранения. Если нет - создает такую папку.
 	Возвращает полный путь до папки*/
-
-	absPath, err := filepath.Abs(dir)
-	if err != nil {
-		log.Fatal(err)
-	}
-	fullPath = filepath.Join(absPath, imageDir)
-
-	if _, err := os.Stat(fullPath); !os.IsExist(err) {
-		if err := os.Mkdir(fullPath, os.ModePerm); err != nil {
-			return
+	if _, err := os.Stat(dir); !os.IsExist(err) {
+		if err := os.Mkdir(dir, os.ModePerm); err != nil {
+			PrintInfoLog(fmt.Sprintf("Папка для хранения файлов уже существует: %v\n", dir))
+			return nil
 		}
-		PrintInfoLog(fmt.Sprintf("Создана папка для хранения файлов по адресу: %v\n", fullPath))
+		PrintInfoLog(fmt.Sprintf("Создана папка для хранения файлов по адресу: %v\n", dir))
 	}
-	return
+	return nil
 }
 
 func DelFile(file os.FileInfo, path string) error {
@@ -112,12 +116,12 @@ func CreateCopyFile(file os.FileInfo, dirFrom, dirTo string) error {
 
 	buf, err := ioutil.ReadFile(PathFrom)
 	if err != nil {
-		PrintInfoLog(fmt.Sprintf("ОШИБКА! Не удалось прочитать файл %q",file.Name()))
+		PrintInfoLog(fmt.Sprintf("ОШИБКА! Не удалось прочитать файл %q", file.Name()))
 		return err
 	}
 
-	if err := ioutil.WriteFile(PathTo, []byte(buf), os.ModePerm); err != nil {
-		PrintInfoLog(fmt.Sprintf("ОШИБКА! Не удалось записать файл %q",file.Name()))
+	if err := ioutil.WriteFile(PathTo, buf, os.ModePerm); err != nil {
+		PrintInfoLog(fmt.Sprintf("ОШИБКА! Не удалось записать файл %q", file.Name()))
 		return err
 	}
 
