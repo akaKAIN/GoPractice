@@ -23,13 +23,17 @@ func GetBaseDir() string {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return filepath.Base(way)
+	return way
+}
+
+func GetStorageDir() string {
+	return filepath.Join(DirFrom, ImageDir)
 }
 
 func InitFlag() {
 	flag.IntVar(&TIMER, "timer", 90, "Интервал проверки (сек).")
 	flag.StringVar(&DirFrom, "dir_from", GetBaseDir(), "Директория для поиска файлов")
-	flag.StringVar(&DirTo, "dir_to", GetBaseDir(), "Директория для сохранения файлов")
+	flag.StringVar(&DirTo, "dir_to", GetStorageDir(), "Директория для сохранения файлов")
 	flag.BoolVar(&LOGGING, "log", false, "Нужно ли выводить логи копирования файлов (Да=1/true; Нет=0/false).")
 	flag.Parse()
 	//tailPtr := flag.Args()
