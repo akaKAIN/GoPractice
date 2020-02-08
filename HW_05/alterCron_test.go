@@ -12,6 +12,28 @@ import (
 	"time"
 )
 
+func CreateTestFile(fileName string, t *testing.T) *os.FileInfo {
+	/*Функция создания файла для проведения тестирования*/
+
+	//Проверяем, что файла с таким же именем не существует.
+	_, err := os.Stat(fileName)
+	if err == nil {
+		t.Fatalf("Файл %q уже существует.", fileName)
+	}
+
+	//Создаем файл
+	if err := ioutil.WriteFile(fileName, []byte("test text"), os.ModePerm); err != nil {
+		t.Fatalf("Ошибка создания тестового файла %q", fileName)
+	}
+
+	//Проверяем, что файл успешно создан
+	NewFile, _ := os.Stat(fileName)
+	if NewFile.Name() != fileName {
+		t.Fatalf("Названия файлов не совпадают.\nОжидается: %s\nСоздан: %s", fileName, NewFile.Name())
+	}
+	return &NewFile
+}
+
 func TestGetOrCreateDir(t *testing.T) {
 	right := []string{"HW_05", "Images"}
 
@@ -49,9 +71,20 @@ func TestDelFile(t *testing.T) {
 		t.Fatal("После тестового создания, файл не обнаружен")
 	}
 	if err := DelFile(TestFile, "."); err != nil {
-		t.Fatalf("Ошибка удаления файла: %s", TestFile.Name())
+		t.Fatalf("Ошибка удаления файла: %q", TestFile.Name())
 	}
-	if _, err := os.Stat(TestFile.Name()); err == nil{
+	if _, err := os.Stat(TestFile.Name()); err == nil {
 		t.Fatalf("Файл %q не был удален в ходе теста", TestFile.Name())
+	}
+}
+
+func TestCheckFile(t *testing.T) {
+	fileName := strconv.Itoa(int(time.Now().UnixNano()))
+	NewFile := CreateTestFile(fileName, t)
+	if !CheckFile(*NewFile) {
+		t.Fatal("Ошибка проверки существования файла.")
+	}
+	if err := DelFile(*NewFile, "."); err !=nil{
+		t.Fatalf("Ошибка удаления файла: %v", NewFile)
 	}
 }
