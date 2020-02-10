@@ -4,32 +4,14 @@ import (
 	"hash/crc32"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"reflect"
+	"sort"
 	"strconv"
 	"testing"
 	"time"
 )
 
-func CreateTestFile(fileName string, t *testing.T) *os.FileInfo {
-	/*Функция создания файла для проведения тестирования*/
-
-	//Проверяем, что файла с таким же именем не существует.
-	_, err := os.Stat(fileName)
-	if err == nil {
-		t.Fatalf("Файл %q уже существует.", fileName)
-	}
-
-	//Создаем файл
-	if err := ioutil.WriteFile(fileName, []byte("test text"), os.ModePerm); err != nil {
-		t.Fatalf("Ошибка создания тестового файла %q", fileName)
-	}
-
-	//Проверяем, что файл успешно создан
-	NewFile, _ := os.Stat(fileName)
-	if NewFile.Name() != fileName {
-		t.Fatalf("Названия файлов не совпадают.\nОжидается: %s\nСоздан: %s", fileName, NewFile.Name())
-	}
-	return &NewFile
-}
 
 func GetFileHash(FilePath string, t *testing.T) uint32 {
 	/*Функция возвращающая хэш указанного файла*/
@@ -78,12 +60,12 @@ func TestCheckFile(t *testing.T) {
 	var right = [5]bool{false, true, true, false, true}
 
 	//Создаем файлы из массива
-	for _, file := range FileSlice{
-		if err := ioutil.WriteFile(file, []byte("test"), os.ModePerm); err != nil{
+	for _, file := range FileSlice {
+		if err := ioutil.WriteFile(file, []byte("test"), os.ModePerm); err != nil {
 			t.Fatal(err)
 		}
 	}
-	for i := range right{
+	for i := range right {
 		FI, err := os.Stat(FileSlice[i])
 		if err != nil {
 			t.Fatal(err, FileSlice[i])
@@ -94,8 +76,8 @@ func TestCheckFile(t *testing.T) {
 	}
 
 	//Удаляем созданные для теста файлы.
-	for _, file := range FileSlice{
-		if err := os.Remove(file); err !=nil {
+	for _, file := range FileSlice {
+		if err := os.Remove(file); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -174,6 +156,45 @@ func TestCheckFile(t *testing.T) {
 //
 //}
 
-//func TestGetFileList(t *testing.T) {
-//
-//}
+func TestGetFileList(t *testing.T) {
+	var nameList = []string{"one", "two", "three", "four", "five"}
+	var result = make([]string, 5)
+	var dir = "TestDir"
+
+	//Создаем тестовую папку
+	if err := os.Mkdir(dir, os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+
+	//Делаем отложенное удаление тестовой папки и всего ее содержимого
+	defer func() {
+		if err := os.RemoveAll(dir); err != nil {
+			t.Fatal("Ошибка удаления тестовых файлов: ", err)
+		}
+	}()
+
+	//Наполняем тестовую папку произвольными файлами
+	for _, fileName := range nameList {
+		path := filepath.Join(dir, fileName)
+		if err := ioutil.WriteFile(path, []byte("test"), os.ModePerm); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	//Получаем отсортированный результат работы функции
+	r := GetFileList(dir)
+
+	//Получаем список имен полученных файлов
+	if len(r) == 5 {
+		for i, name := range r {
+			result[i] = name.Name()
+		}
+	} else {
+		t.Fatalf("\nКоличество прочитанного: %d.\nОжидалось: %d", len(r), len(nameList))
+	}
+
+	sort.Strings(nameList) //Сортируем
+	if !reflect.DeepEqual(result, nameList) {
+		t.Fatalf("\nПолучено: %v\nОжидалось: %v", result, nameList)
+	}
+}
