@@ -83,78 +83,48 @@ func TestCheckFile(t *testing.T) {
 	}
 }
 
-//func TestCreateCopyFile(t *testing.T) {
-//StartLoop:
-//	fileName := strconv.Itoa(int(time.Now().UnixNano()))
-//
-//	//Проверяем не существует ли уже тестовый файл.
-//	if _, err := os.Stat(fileName); err == nil {
-//		t.Logf("Тестовый файл %q уже существует: %s", fileName, err)
-//		goto StartLoop
-//	}
-//	absBasePath, err := filepath.Abs(".")
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	fileNamePath := filepath.Join(absBasePath, fileName)
-//
-//	//Создает тестовую директорию
-//	if err := GetOrCreateDir(".", "TestingCreateFile")
-//	PathToTestFile := filepath.Join(TestStorage, fileName)
-//
-//	//Отложенна функция очистки тестовой директории от содержимого
-//	defer func() {
-//		if _, err := os.Stat(TestStorage); err != nil {
-//			t.Fatal(err)
-//		}
-//		if err := os.RemoveAll(TestStorage); err != nil {
-//			t.Fatal(err)
-//		}
-//	}()
-//
-//	//Проверяем, что в ней нет тестируемого файла
-//	if _, err := os.Stat(PathToTestFile); err == nil {
-//		t.Fatal(err)
-//	}
-//
-//	//Создаем тестовый файл, затем делаем отложенное удаление файла.
-//	baseFile := *CreateTestFile(fileName, t)
-//	defer func() {
-//		if err := DelFile(baseFile, "."); err != nil {
-//			t.Fatal(err)
-//		}
-//	}()
-//
-//	// Дописываем в базовый файл произвольную строку
-//	text := fmt.Sprintf("Date of writing is %v", time.Now())
-//	fb, err := os.OpenFile(baseFile.Name(), os.O_RDWR, os.ModePerm)
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	defer func() {
-//		if err := fb.Close(); err != nil {
-//			t.Fatal(err)
-//		}
-//	}()
-//
-//	//Пишем в файл
-//	if _, err := fb.WriteString(text); err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	//Создание и получение тестируемой копии файла в директории.
-//	if err := CreateCopyFile(baseFile, ".", TestStorage); err != nil {
-//		t.Fatal(err)
-//	}
-//
-//	//Сравниваем хэши исходного файла и скопированного
-//	h1 := GetFileHash(fileNamePath, t)
-//	h2 := GetFileHash(PathToTestFile, t)
-//	if h1 != h2 {
-//		t.Fatal()
-//	}
-//
-//}
+func TestCreateCopyFile(t *testing.T){
+	var dir = "TestDir"
+	fileBase := strconv.Itoa(int(time.Now().UnixNano()))
+	PathToTestFile := filepath.Join(dir, fileBase)
+
+	if err := os.Mkdir(dir, os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.RemoveAll(dir); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	//Создаем файл для копирования
+	if err := ioutil.WriteFile(fileBase, []byte("test text"), os.ModePerm); err != nil {
+		t.Fatal(err)
+	}
+	defer func() {
+		if err := os.Remove(fileBase); err != nil {
+			t.Fatal(err)
+		}
+	}()
+
+	baseFI, err := os.Stat(fileBase)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if err := CreateCopyFile(baseFI, ".", dir); err != nil {
+		t.Fatal(err)
+	}
+
+
+	//Сравниваем хэши исходного файла и скопированного
+	h1 := GetFileHash(fileBase, t)
+	h2 := GetFileHash(PathToTestFile, t)
+	if h1 != h2 {
+		t.Fatal("Файл не является копией")
+	}
+
+}
 
 func TestGetFileList(t *testing.T) {
 	var nameList = []string{"one", "two", "three", "four", "five"}
