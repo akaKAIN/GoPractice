@@ -18,3 +18,4 @@
 Image/
 *.jpeg
 *.jpg
+config.go
