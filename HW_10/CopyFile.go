@@ -1,8 +1,11 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
 	"github.com/cheggaaa/pb/v3"
+	"log"
 	"time"
 )
 
@@ -26,18 +29,24 @@ type Session struct {
 	PathTo   string
 	FileName string
 	FileSize int64
-	Offset   int
-	Limit    int
+	Offset   int64
+	Limit    int64
+	NewFile *bufio.Writer
 }
 
 func main() {
 	flag.Parse() //Парсинг флогов.
+	s, err := MakeSession()
+	if err != nil {
+		log.Println(err)
+		CheckErr("MakeSession", err)
+	}
+	fmt.Printf("%+v\n", s)
 
 
 	//file, err := os.Open(From)
 
-	count := 10000
-	// start bar from 'full' template
+	count := 2000
 	bar := pb.Full.Start(count)
 
 	for i := 0; i < count; i++ {

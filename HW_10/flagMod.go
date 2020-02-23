@@ -7,13 +7,13 @@ import (
 var (
 	From   string
 	To     string
-	Offset int
-	Limit int
+	Offset int64
+	Limit  int64
 )
 
 func InitFlag() {
 	flag.StringVar(&From, "from", "", "Адрес копируемого файла")
 	flag.StringVar(&To, "to", "", "Конечное расположение копируемого файла")
-	flag.IntVar(&Offset, "offset", 0, "Отступ в источнике.")
-	flag.IntVar(&Limit, "limit", 0, "Кол-во копируемых байт.")
+	flag.Int64Var(&Offset, "offset", 0, "Отступ в источнике.")
+	flag.Int64Var(&Limit, "limit", 0, "Кол-во копируемых байт.")
 }

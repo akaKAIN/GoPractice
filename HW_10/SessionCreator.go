@@ -2,49 +2,84 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"io"
 	"os"
 	"path/filepath"
 )
 
-func MakeSession() (*Session, error){
+func MakeSession() (*Session, error) {
+	//Проверяем, что переданы не пустые аргументы
 	if From == "" || To == "" {
-		err := fmt.Errorf("Неверно указан путь файла: %q -> %q\n", From, To)
-		CheckErr("", err)
-		log.Fatal(err)
+		err := fmt.Errorf("Неверно указан путь файла: %q -> %q", From, To)
+		return nil, err
 	}
-	
-	var s = new(Session)
 
-	fileName := filepath.Base(From)
-	fileOld, err := os.Open(From)
-	CheckErr("OpenFile from session", err)
-
-	if NewFileNameInPathTo {
-
+	//Получаем имя, размер копируемого файла
+	fileName, fileSize, err := CheckFile(From)
+	if err != nil {
+		err = fmt.Errorf("Ошибка копирования указанного файла (он не найден): %v", From)
+		return nil, err
 	}
-	fileNew, err := os.Create()
 
+	//Создаем файл, куда будем копировать.
+CreateLoop:
+	file, err := os.Create(To)
+	if err != nil {
+		if os.IsNotExist(err) {
+			PathToFile := filepath.Dir(To)
+			err := os.MkdirAll(PathToFile, os.ModePerm)
+			if err != nil {
+				return nil, err
+			}
+			goto CreateLoop
 
-	return s, nil
+		}
+		err = fmt.Errorf("Ошибка создания файла для копирования: %s", err)
+		return nil, err
+	}
+	defer func() {
+		err := file.Close()
+		if err != nil{
+			err := fmt.Errorf("Ошибка закрытия файла: %s", To)
+			CheckErr("", err)
+		}
+	}()
+	var lim = make([]byte, Limit)
+	ret, err := file.Seek(Offset, io.SeekCurrent)
+	limReader, err := file.ReadAt(lim, ret)
+	if err != nil {
+		err = fmt.Errorf("Ошибка чтения: %s", err)
+		return nil, err
+	}
+	fmt.Println(limReader)
+
+	var s = Session{
+		PathFrom: From,
+		PathTo:   To,
+		FileName: fileName,
+		FileSize: fileSize,
+		Offset:   Offset,
+		Limit:    Limit,
+	}
+	return &s, nil
 }
 
-func NewFileNameInPathTo ()bool{
+func NewFileNameInPathTo() bool {
 	//Проверяем, что путь содержит в себе имя файла, куда будем копировать.
 	filepath.Dir(To)
 	return false
 }
 
-func CheckFile(path string) (int64, error) {
+func CheckFile(path string) (string, int64, error) {
 	FileInfo, err := os.Stat(path)
 	if err != nil {
-		switch {
-		case os.IsNotExist(err):
-			return 0, err
-		case FileInfo.IsDir():
-			err = fmt.Errorf("Не указано имя файла для копирования. Err: %s\n", err)
-			return 0, err
+		if os.IsNotExist(err) {
+			return "", 0, err
 		}
 	}
-	return FileInfo.Size(), nil
+	if FileInfo.IsDir() {
+		err = fmt.Errorf("Не указано имя файла для копирования. Err: %s", err)
+		return "", 0, err
+	}
+	return FileInfo.Name(), FileInfo.Size(), nil
 }
