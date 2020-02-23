@@ -14,12 +14,6 @@ func main() {
 	wg.Add(1)
 	Login(&wg)
 	wg.Wait()
-	for i := 0; i < 10000; i++ {
-		go func() {
-			i += 0
-		}()
-	}
-
 }
 
 func Login(wg *sync.WaitGroup) {
