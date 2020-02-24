@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 )
@@ -39,19 +38,14 @@ CreateLoop:
 	}
 	defer func() {
 		err := file.Close()
-		if err != nil{
+		if err != nil {
 			err := fmt.Errorf("Ошибка закрытия файла: %s", To)
 			CheckErr("", err)
 		}
 	}()
-	var lim = make([]byte, Limit)
-	ret, err := file.Seek(Offset, io.SeekCurrent)
-	limReader, err := file.ReadAt(lim, ret)
-	if err != nil {
-		err = fmt.Errorf("Ошибка чтения: %s", err)
-		return nil, err
-	}
-	fmt.Println(limReader)
+
+	newFile, err := os.Stat(From)
+	CheckErr("Error from get FileInfo", err)
 
 	var s = Session{
 		PathFrom: From,
@@ -60,14 +54,9 @@ CreateLoop:
 		FileSize: fileSize,
 		Offset:   Offset,
 		Limit:    Limit,
+		NewFile:  &newFile,
 	}
 	return &s, nil
-}
-
-func NewFileNameInPathTo() bool {
-	//Проверяем, что путь содержит в себе имя файла, куда будем копировать.
-	filepath.Dir(To)
-	return false
 }
 
 func CheckFile(path string) (string, int64, error) {
