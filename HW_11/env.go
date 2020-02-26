@@ -15,6 +15,7 @@ func ShowEnv(){
 	fmt.Println(os.LookupEnv("LANG"))
 
 	cmd := exec.Command("ls", "-lsa")
+	cmd.Stdout = os.Stdout
 	err := cmd.Start()
 	if err != nil {
 		log.Fatal(err)
