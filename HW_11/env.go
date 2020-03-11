@@ -8,7 +8,9 @@ import (
 	"time"
 )
 
-func ShowEnv(){
+//go:generate echo "generator"
+
+func ShowEnv() {
 	var env []string
 	env = os.Environ()
 	fmt.Println(env[:5])
